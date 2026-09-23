@@ -47,7 +47,12 @@ async function walkWizard(page, applicant, account, label, stats, result, finish
     if (currentPage === 'highload') { await recoverHighLoad(page, label); continue; }
     if (currentPage === 'captcha') { await pauseForCaptcha(page, pageLabel, stats); continue; }
     if (currentPage === 'login') { await login(page, account.username, account.password, label, stats); await continueToApplication(page, applicant, label, stats); continue; }
-    if (currentPage === 'payment') { console.log(`[${label}] dừng trước trang thanh toán để không nhập thông tin thẻ.`); return finish('STOP_PAYMENT'); }
+    if (currentPage === 'payment') {
+      result.paymentUrl = await page.url();
+      console.log(`[${label}] PAYMENT_LINK ${result.paymentUrl}`);
+      console.log(`[${label}] dừng trước trang thanh toán để không nhập thông tin thẻ.`);
+      return finish('STOP_PAYMENT');
+    }
     if (currentPage === 'payer') { await fillText(page, textSelectors.payerName, applicant.payment?.payer_name || applicant.payer_name || 'Vu Quang Nguyen'); await clickLabeled(page, ['OK'], ['PAY NOW', 'PAY LATER', 'NEXT STEP'], pageLabel, stats); continue; }
     if (currentPage === 'pay_next') { await clickFirstControl(page, ['#ContentPlaceHolder1_onlinePaymentAnchor2', 'a[id$="onlinePaymentAnchor2"]', 'a[href*="PaymentGateway/OnLinePayment"]', 'a[href*="OnLinePayment.aspx"]'], pageLabel, stats); continue; }
     if (currentPage === 'pay_now') { await clickLabeled(page, ['PAY NOW'], ['PAY LATER'], pageLabel, stats); continue; }

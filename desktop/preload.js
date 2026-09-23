@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('runnerApi', {
   saveData: data => ipcRenderer.invoke('data-save', data),
   loadTelegram: () => ipcRenderer.invoke('telegram-load'),
   saveTelegram: data => ipcRenderer.invoke('telegram-save', data),
+  testTelegram: data => ipcRenderer.invoke('telegram-test', data),
   importData: kind => ipcRenderer.invoke('data-import', kind),
   exportData: data => ipcRenderer.invoke('data-export', data),
   openFolder: () => ipcRenderer.invoke('runner-open-folder'),

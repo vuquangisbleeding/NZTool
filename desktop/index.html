@@ -14,6 +14,7 @@
     </header>
     <nav class="tabs" aria-label="Main sections">
       <button class="tab active" data-tab="run">Run</button>
+      <button class="tab" data-tab="logs">Runner log</button>
       <button class="tab" data-tab="data">Applicant data</button>
       <button class="tab" data-tab="settings">Settings</button>
     </nav>
@@ -27,7 +28,9 @@
         <div class="panel-head"><div><p class="eyebrow">ACCOUNT MONITOR</p><h3>Payment progress</h3></div></div>
         <div class="table-wrap"><table><thead><tr><th>Account</th><th>Status</th><th>Started</th><th>Elapsed</th><th>Payment link</th></tr></thead><tbody id="accountRows"></tbody></table></div>
       </section>
-      <section class="log-panel"><div class="panel-head"><div><p class="eyebrow">LIVE OUTPUT</p><h3>Runner log</h3></div><button id="clear" class="clear">Clear</button></div><pre id="log"></pre></section>
+    </section>
+    <section class="tab-panel" data-panel="logs">
+      <section class="log-panel log-tab-panel"><div class="panel-head"><div><p class="eyebrow">LIVE OUTPUT</p><h3>Runner log</h3></div><button id="clear" class="clear">Clear</button></div><pre id="log"></pre></section>
     </section>
     <section class="tab-panel" data-panel="data">
     <section class="data-panel">
@@ -55,7 +58,7 @@
         <label>CapSolver API key<input id="capsolverApiKey" type="password" autocomplete="off" placeholder="CAP-..."></label>
         <label>Bot token<input id="telegramToken" type="password" autocomplete="off" placeholder="TELEGRAM_BOT_TOKEN"></label>
         <label>Chat ID<input id="telegramChatId" type="text" autocomplete="off" placeholder="TELEGRAM_CHAT_ID"></label>
-        <div class="settings-save"><button id="saveTelegram" class="secondary">Save Telegram settings</button><span id="telegramStatus" class="data-status"></span></div>
+        <div class="settings-save"><button id="saveTelegram" class="secondary">Save Telegram settings</button><button id="testTelegram" class="small-button">Send test</button><span id="telegramStatus" class="data-status"></span></div>
       </div>
     </section>
     </section>

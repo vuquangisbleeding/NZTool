@@ -44,7 +44,7 @@ function updateAccountRows() {
     row.querySelector('.account-state').textContent = state.status;
     row.querySelector('.account-start').textContent = state.startedAt ? new Date(state.startedAt).toLocaleTimeString() : '-';
     row.querySelector('.account-elapsed').textContent = formatDuration((state.finishedAt || Date.now()) - (state.startedAt || Date.now()));
-    if (state.paymentUrl) row.querySelector('.account-payment').innerHTML = `<a href="${state.paymentUrl}" target="_blank">Open payment</a>`;
+    if (state.paymentUrl) row.querySelector('.account-payment').innerHTML = `<a href="${state.paymentUrl}" target="_blank">${state.paymentUrl}</a>`;
   }
 }
 
@@ -149,6 +149,16 @@ async function saveTelegram() {
   }
 }
 
+async function testTelegram() {
+  try {
+    if (!await saveTelegram()) return;
+    await window.runnerApi.testTelegram({ botToken: telegramToken.value.trim(), chatId: telegramChatId.value.trim() });
+    setTelegramStatus('Test message sent', 'valid');
+  } catch (error) {
+    setTelegramStatus(error.message, 'invalid');
+  }
+}
+
 function parseData() {
   const applicant = JSON.parse(applicantInput.value);
   const accounts = JSON.parse(accountsInput.value);
@@ -218,6 +228,7 @@ async function exportFile(kind) {
 
 document.querySelector('#saveData').addEventListener('click', () => saveData());
 document.querySelector('#saveTelegram').addEventListener('click', saveTelegram);
+document.querySelector('#testTelegram').addEventListener('click', testTelegram);
 document.querySelector('#importApplicant').addEventListener('click', () => importFile('applicant'));
 document.querySelector('#exportApplicant').addEventListener('click', () => exportFile('applicant'));
 document.querySelector('#importAccounts').addEventListener('click', () => importFile('accounts'));

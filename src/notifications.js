@@ -26,7 +26,8 @@ function buildTelegramSummary(results, totalRuntime) {
     `Tổng thời gian giải CAPTCHA: ${formatDuration(captchaRuntime)} (${captchaRuntime} ms)`, ''];
   for (const result of results) {
     lines.push(`[${result.status}] ${result.label}`, `Thời gian account: ${formatDuration(result.runtimeMs)} (${result.runtimeMs} ms)`,
-      `Thời gian CAPTCHA: ${formatDuration(result.captchaMs)} (${result.captchaMs} ms)`, result.applicantInfo, '');
+      `Thời gian CAPTCHA: ${formatDuration(result.captchaMs)} (${result.captchaMs} ms)`,
+      `Payment link: ${result.paymentUrl || '(chưa có)'}`, result.applicantInfo, '');
   }
   return lines.join('\n').trim();
 }

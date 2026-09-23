@@ -85,6 +85,17 @@ async function saveTelegramSettings(_event, { botToken, chatId, schemeCountry, c
   return { ok: true };
 }
 
+async function sendTelegramTest(_event, { botToken, chatId }) {
+  if (!botToken || !chatId) throw new Error('Nhập TELEGRAM_BOT_TOKEN và TELEGRAM_CHAT_ID trước.');
+  const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text: 'INZ Runner test message: Telegram kết nối thành công.' })
+  });
+  if (!response.ok) throw new Error(`Telegram trả về HTTP ${response.status}`);
+  return { ok: true };
+}
+
 function validateData(applicantText, accountsText) {
   let applicant;
   let accounts;
@@ -190,6 +201,7 @@ app.whenReady().then(() => {
   ipcMain.handle('data-save', saveData);
   ipcMain.handle('telegram-load', readTelegramSettings);
   ipcMain.handle('telegram-save', saveTelegramSettings);
+  ipcMain.handle('telegram-test', sendTelegramTest);
   ipcMain.handle('data-import', importData);
   ipcMain.handle('data-export', exportData);
   ipcMain.handle('runner-open-folder', () => dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] }));
