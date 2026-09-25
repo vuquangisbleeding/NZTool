@@ -7,7 +7,7 @@ const { login } = require('./auth');
 const { continueToApplication } = require('./entry');
 const { detectPage } = require('./detect');
 const { pauseForCaptcha } = require('./captcha');
-const { recoverHighLoad } = require('./recovery');
+const { recoverHighLoad, waitForManualRecovery } = require('./recovery');
 const { clickFirstControl, clickLabeled, advance } = require('./actions');
 const { fillDeclaration } = require('./declaration');
 const { fillPersonal1, fillIdentification } = require('./forms/personal');
@@ -35,7 +35,19 @@ async function runApplicant(browser, baseApplicant, account, index) {
     await login(page, account.username, account.password, label, stats);
     await continueToApplication(page, applicant, label, stats);
     return await walkWizard(page, applicant, account, label, stats, result, finish);
-  } catch (error) { console.error(`[${label}] lỗi: ${error.message}`); return finish(`ERROR: ${error.message}`); }
+  } catch (error) {
+    console.error(`[${label}] lỗi: ${error.message}`);
+    try {
+      await waitForManualRecovery(page, label, error);
+      console.log(`[${label}] MANUAL_RECOVERY_RESUME`);
+      await recoverHighLoad(page, label);
+      await continueToApplication(page, applicant, label, stats).catch(() => {});
+      return await walkWizard(page, applicant, account, label, stats, result, finish);
+    } catch (recoveryError) {
+      console.error(`[${label}] MANUAL_RECOVERY_ERROR ${recoveryError.message}`);
+      return finish(`ERROR: ${error.message}`);
+    }
+  }
 }
 
 async function walkWizard(page, applicant, account, label, stats, result, finish) {
@@ -56,7 +68,11 @@ async function walkWizard(page, applicant, account, label, stats, result, finish
     if (currentPage === 'payer') { await fillText(page, textSelectors.payerName, applicant.payment?.payer_name || applicant.payer_name || 'Vu Quang Nguyen'); await clickLabeled(page, ['OK'], ['PAY NOW', 'PAY LATER', 'NEXT STEP'], pageLabel, stats); continue; }
     if (currentPage === 'pay_next') { await clickFirstControl(page, ['#ContentPlaceHolder1_onlinePaymentAnchor2', 'a[id$="onlinePaymentAnchor2"]', 'a[href*="PaymentGateway/OnLinePayment"]', 'a[href*="OnLinePayment.aspx"]'], pageLabel, stats); continue; }
     if (currentPage === 'pay_now') { await clickLabeled(page, ['PAY NOW'], ['PAY LATER'], pageLabel, stats); continue; }
-    if (currentPage === 'unknown') { await dumpUnknown(page, label); return finish('STOP_UNKNOWN'); }
+    if (currentPage === 'unknown') {
+      await dumpUnknown(page, label);
+      await waitForManualRecovery(page, label, new Error('Không nhận diện được trang hiện tại.'));
+      continue;
+    }
     if (currentPage === 'declaration' || currentPage === 'submit') {
       const declaration = await fillDeclaration(page, applicant, pageLabel);
       if (declaration.total === 0) { console.log(`[${pageLabel}] DECLARATION_ALREADY_SUBMITTED`); continue; }
@@ -71,8 +87,14 @@ async function walkWizard(page, applicant, account, label, stats, result, finish
     else if (currentPage === 'whs') await fillWhs(page, applicant, pageLabel);
     else if (currentPage === 'personal3') await dumpUnknown(page, pageLabel);
     const advanced = await advance(page, pageLabel, stats, actions);
-    if (advanced === 'saved') return finish('STOP_SAVE');
-    if (!advanced) return finish('STOP_NO_NEXT');
+    if (advanced === 'saved') {
+      await waitForManualRecovery(page, pageLabel, new Error('Đã Save nhưng chưa thấy Next/Submit.'));
+      continue;
+    }
+    if (!advanced) {
+      await waitForManualRecovery(page, pageLabel, new Error('Không tìm thấy Next/Save/Submit.'));
+      continue;
+    }
   }
   return finish('MAX_PAGES');
 }

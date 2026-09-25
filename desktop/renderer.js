@@ -32,7 +32,7 @@ function renderAccountRows(accounts = []) {
   accounts.forEach((account, index) => {
     const row = document.createElement('tr');
     row.id = `account-row-${index + 1}`;
-    row.innerHTML = `<td>${account.username}</td><td class="account-state">Waiting</td><td class="account-start">-</td><td class="account-elapsed">00:00:00</td><td class="account-payment">-</td>`;
+    row.innerHTML = `<td>${account.username}</td><td class="account-state">Waiting</td>`;
     accountRows.appendChild(row);
   });
 }
@@ -42,9 +42,6 @@ function updateAccountRows() {
     const row = document.querySelector(`#account-row-${index}`);
     if (!row) continue;
     row.querySelector('.account-state').textContent = state.status;
-    row.querySelector('.account-start').textContent = state.startedAt ? new Date(state.startedAt).toLocaleTimeString() : '-';
-    row.querySelector('.account-elapsed').textContent = formatDuration((state.finishedAt || Date.now()) - (state.startedAt || Date.now()));
-    if (state.paymentUrl) row.querySelector('.account-payment').innerHTML = `<a href="${state.paymentUrl}" target="_blank">${state.paymentUrl}</a>`;
   }
 }
 

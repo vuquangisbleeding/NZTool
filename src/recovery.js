@@ -45,4 +45,51 @@ async function recoverHighLoadLocked(page, label) {
   }
 }
 
-module.exports = { isHighLoadPage, recoverHighLoad };
+async function waitForManualRecovery(page, label, error) {
+  const previousUrl = await page.url();
+  const previousMarker = await readManualMarker(page);
+  console.log(`[${label}] MANUAL_RECOVERY_WAIT error=${error.message}`);
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      if (settled) return;
+      settled = true;
+      clearInterval(timer);
+      page.off('framenavigated', onFrameNavigated);
+      page.off('close', onClose);
+    };
+    const finish = result => { cleanup(); resolve(result); };
+    const check = async () => {
+      if (page.isClosed()) return;
+      try {
+        const currentUrl = await page.url();
+        const currentMarker = await readManualMarker(page);
+        if (currentUrl !== previousUrl || currentMarker !== previousMarker) {
+          console.log(`[${label}] MANUAL_RECOVERY_DETECTED url=${currentUrl}`);
+          finish(true);
+        }
+      } catch (checkError) {
+        cleanup();
+        reject(checkError);
+      }
+    };
+    const onFrameNavigated = frame => { if (frame === page.mainFrame()) finish(true); };
+    const onClose = () => { cleanup(); reject(new Error('Chrome page đã bị đóng trong lúc chờ thao tác thủ công.')); };
+    const timer = setInterval(check, config.manualRecoveryPollMs);
+    page.on('framenavigated', onFrameNavigated);
+    page.on('close', onClose);
+    check();
+  });
+}
+
+async function readManualMarker(page) {
+  return page.evaluate(() => {
+    const body = (document.body?.innerText || '').slice(0, 500);
+    const fields = [...document.querySelectorAll('input,select,textarea')]
+      .map(element => `${element.name || element.id}:${element.value || ''}:${element.checked ? 'checked' : ''}`)
+      .join('|');
+    return `${body}\nFORM:${fields}`;
+  });
+}
+
+module.exports = { isHighLoadPage, recoverHighLoad, waitForManualRecovery };
